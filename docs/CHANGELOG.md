@@ -3,6 +3,11 @@
 Append-only. Each entry is a version; each version has a matching `docs/vX.Y/`
 folder with the full documentation as of that release.
 
+## Unreleased — agent-dispatch comment trigger (2026-08-05)
+
+- `.github/workflows/agent-dispatch.yml` now also fires on an `/agent` (or `/agent <model-slug>`) comment on an issue, not just an `agent:*` label — covers issues #1-#3, which predate this workflow and have no label-trigger path. Merged with PR #6's ticker-wiring changes via `git merge origin/main` (commit `ad0980f`); `next-env.d.ts` and `tsconfig.tsbuildinfo` moved to `.gitignore` (generated files, shouldn't have been committed).
+- Still blocked on: `AGENT_TASK_PAT` repo secret (classic PAT, `repo` scope) not yet confirmed set — required before either trigger path can actually start a cloud agent task.
+
 ## Unreleased — eligibility ticker wiring (2026-08-05)
 
 - `lib/eligibility.ts`: `checkEligibility()` now references the entered ticker (when present) in a hand-authored reminder reason, closing the "ticker is cosmetic" gap noted in `docs/v1.0/02-UI-GUIDE.md` and issue #4. Status/rule branching still depends only on market + instrument type — the ticker is echoed back as a reminder to check the specific symbol's own listing details, not used to alter the rules engine's logic.
