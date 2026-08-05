@@ -3,6 +3,11 @@
 Append-only. Each entry is a version; each version has a matching `docs/vX.Y/`
 folder with the full documentation as of that release.
 
+## Unreleased — eligibility ticker wiring (2026-08-05)
+
+- `lib/eligibility.ts`: `checkEligibility()` now references the entered ticker (when present) in a hand-authored reminder reason, closing the "ticker is cosmetic" gap noted in `docs/v1.0/02-UI-GUIDE.md` and issue #4. Status/rule branching still depends only on market + instrument type — the ticker is echoed back as a reminder to check the specific symbol's own listing details, not used to alter the rules engine's logic.
+- Updated `docs/v1.0/02-UI-GUIDE.md` to reflect the above.
+
 ## Unreleased — multi-agent workflow setup (2026-08-05)
 
 - Repo published to GitHub: https://github.com/sudhanva15/moneyball_OS
