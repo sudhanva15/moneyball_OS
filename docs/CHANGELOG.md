@@ -12,6 +12,8 @@ folder with the full documentation as of that release.
 - **Known gap:** attempted to auto-assign issue to GitHub Copilot's coding agent via `assignees: ["copilot-swe-agent"]` — failed (issue creation without an assignee succeeds; adding that assignee fails). Likely cause: Copilot coding agent not yet enabled on this repo (Settings → Copilot → Coding agent), or the bot's actual login differs. Unresolved — needs a manual check in the GitHub UI to confirm whether "Copilot" appears as an assignable user on an issue.
 - Auto-merge workflow also depends on two repo settings not yet confirmed: "Allow auto-merge" (Settings → General) and, ideally, a branch protection rule requiring the CI check on `main`.
 
+- Added `.github/workflows/agent-dispatch.yml`: labeling an issue `agent:*` calls GitHub's Agent Tasks API (`POST /agents/repos/{owner}/{repo}/tasks`) directly, replacing the manual "Assign to Agent" UI click. Confirmed via GitHub's own docs that this API rejects server-to-server tokens (rules out the default `GITHUB_TOKEN` and the GitKraken connector) — requires a classic PAT stored as repo secret `AGENT_TASK_PAT`. Not yet set up — see `TASKS.md`.
+
 ## v1.0 — 2026-08-05
 
 **Type:** Initial release (research dashboard + eligibility engine)
