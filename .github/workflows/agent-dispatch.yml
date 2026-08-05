@@ -12,17 +12,22 @@ name: Dispatch issue to cloud agent
 # Model conventions (same for both triggers):
 #   agent:dispatch  or  /agent            -> auto model selection
 #   agent:<model-slug>  or  /agent <slug> -> pin a specific model,
-#     e.g. agent:claude-sonnet-5 / "/agent claude-sonnet-5"
-#     (slug must match what GitHub's agent tasks API expects — if a pinned
-#     model fails, this job's log shows the API's error; fall back to
-#     auto-selection while confirming the right slug)
+#     e.g. agent:claude-sonnet-4.6 / "/agent claude-sonnet-4.6"
+#     Per https://docs.github.com/en/rest/agent-tasks/agent-tasks (as of
+#     2026-08), supported values are: claude-sonnet-4.6, claude-opus-4.6,
+#     gpt-5.2-codex, gpt-5.3-codex, gpt-5.4, claude-sonnet-4.5, claude-opus-4.5.
+#     This list changes over time — if a pinned model fails, this job's
+#     "Report result" comment on the issue shows the API's error; check the
+#     docs page above for the current list.
 #
-# Requires a repo secret AGENT_TASK_PAT — a classic personal access token
-# with `repo` scope. This MUST be a real PAT: the agent tasks API explicitly
-# rejects server-to-server tokens (including the default GITHUB_TOKEN this
-# workflow would otherwise use), per GitHub's own docs. The token lives only
-# in this repo's encrypted secrets — never pasted into chat, never touches
-# Claude's sandbox.
+# Requires a repo secret AGENT_TASK_PAT. This CANNOT be a classic PAT —
+# per GitHub's own docs (link above), the "Start a task" endpoint only
+# accepts a fine-grained personal access token (repository access limited to
+# this repo, "Agent tasks" repository permission set to Read and write) or a
+# GitHub App user access token. A classic PAT authenticates fine but gets a
+# generic 403 {"message":"forbidden"} — cost us a couple of failed runs
+# figuring that out. The token lives only in this repo's encrypted secrets —
+# never pasted into chat, never touches Claude's sandbox.
 
 on:
   issues:
