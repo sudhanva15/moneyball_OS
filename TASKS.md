@@ -7,12 +7,14 @@ Phase 5 is new (added per the paper-trading/self-improvement request) and
 isn't in that doc yet — fold it in there once scoped further.
 
 ## Phase 1 — Foundations
-- [ ] Connect this repo to GitHub (`gh repo create` or manually), push `main`
-- [ ] Add Neon Postgres, wire `DATABASE_URL`
-- [ ] `profile` table (versioned snapshots, not a mutable row) + migrate `lib/profile.ts` data in as row 1
-- [ ] `watchlist` table + migrate `lib/symbols.ts` watchlist in
-- [ ] In-app settings page to edit profile (writes a new versioned row, doesn't mutate)
-- [ ] Wire the eligibility ticker field into `checkEligibility()` output (currently cosmetic — see `docs/v1.0/02-UI-GUIDE.md`)
+- [x] Connect this repo to GitHub, push `main` — https://github.com/sudhanva15/moneyball_OS
+- [ ] Add Neon Postgres, wire `DATABASE_URL` — [issue #1](https://github.com/sudhanva15/moneyball_OS/issues/1)
+- [ ] Migrate `lib/profile.ts`/`lib/symbols.ts` reads to the DB — [issue #2](https://github.com/sudhanva15/moneyball_OS/issues/2) (depends on #1)
+- [ ] In-app settings page to edit profile — [issue #3](https://github.com/sudhanva15/moneyball_OS/issues/3) (depends on #2)
+- [ ] Wire the eligibility ticker field into `checkEligibility()` output — [issue #4](https://github.com/sudhanva15/moneyball_OS/issues/4) (touches `lib/eligibility.ts` — held for manual review, won't auto-merge)
+
+Issue #5 is a duplicate of #4 created while testing Copilot coding-agent
+auto-assignment (failed — see `docs/CHANGELOG.md`); close it once #4 is done.
 
 ## Phase 2 — Company Intelligence
 - [ ] SEC EDGAR client (`companyfacts`, `xbrl/frames`) — US fundamentals
