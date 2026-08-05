@@ -43,7 +43,7 @@ annotate.
 | Element | Meaning |
 |---|---|
 | "Your Profile" card | A static read-out of `lib/profile.ts` — your visa status, US tax residency, and India account status, in your own words (the `notes` field). This is not editable in the UI in v1.0. |
-| Market / Instrument type / Ticker controls | Ticker is currently cosmetic — the rules engine doesn't branch on the specific symbol, only on market + instrument type. Typing a ticker doesn't change the result in v1.0. |
+| Market / Instrument type / Ticker controls | Ticker doesn't change the status or which rules fire — those still branch only on market + instrument type. If you type a ticker, it's echoed back in a reminder reason so the reasons list references the specific symbol you entered. |
 | Status badge colors | Green = ELIGIBLE. Amber = CAUTION or ACTION_NEEDED (same color, different headline text — see below). Red = BLOCKED. |
 | Badge headline text | `Eligible` / `Eligible, with caveats` / `Action needed before trading` / `Not recommended for your situation` — read the headline, not just the color, since CAUTION and ACTION_NEEDED share a color. |
 | Bulleted reasons below the badge | Every rule that fired, each with a plain-English explanation and (where relevant) what regulation or broker rule it's based on. Multiple reasons can appear even for an ELIGIBLE result — read them, they're not just failure messages. |

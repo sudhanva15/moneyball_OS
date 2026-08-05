@@ -119,6 +119,13 @@ export function checkEligibility(input: EligibilityInput): EligibilityResult {
     reasons.push('No specific constraints flagged for your current profile — standard investment risk still applies.');
   }
 
+  const ticker = input.ticker?.trim();
+  if (ticker) {
+    reasons.push(
+      `This assessment is based on market and instrument type, not on ${ticker} specifically — confirm ${ticker}'s own listing details (exchange, share class, fund domicile) before trading, since those can change the analysis above.`
+    );
+  }
+
   const headline: Record<EligibilityStatus, string> = {
     ELIGIBLE: 'Eligible',
     CAUTION: 'Eligible, with caveats',
