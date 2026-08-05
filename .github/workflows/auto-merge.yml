@@ -1,0 +1,55 @@
+name: Auto-merge low-risk PRs
+
+# Enables GitHub's native auto-merge on PRs that (a) don't touch
+# compliance/financial-logic files and (b) aren't drafts. Requires:
+#   1. Repo setting "Allow auto-merge" turned on (Settings > General).
+#   2. Ideally a branch protection rule on `main` requiring the CI job
+#      above to pass before merge — otherwise auto-merge will merge as
+#      soon as nothing else blocks it, without waiting on CI.
+# PRs touching the protected paths below are intentionally left alone —
+# they need an explicit human (or cross-agent) review and manual merge.
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, ready_for_review]
+
+permissions:
+  pull-requests: write
+  contents: write
+
+jobs:
+  gate-and-enable:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for protected-path changes
+        id: paths
+        run: |
+          BASE="origin/${{ github.event.pull_request.base.ref }}"
+          git fetch origin ${{ github.event.pull_request.base.ref }} --depth=1
+          CHANGED=$(git diff --name-only "$BASE"...HEAD)
+          echo "Changed files:"
+          echo "$CHANGED"
+          if echo "$CHANGED" | grep -E '^lib/eligibility\.ts$|^lib/profile\.ts$'; then
+            echo "protected=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "protected=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Enable auto-merge (low-risk only)
+        if: steps.paths.outputs.protected == 'false'
+        run: gh pr merge --auto --squash "${{ github.event.pull_request.number }}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Comment why this needs manual review
+        if: steps.paths.outputs.protected == 'true'
+        run: |
+          gh pr comment "${{ github.event.pull_request.number }}" --body \
+            "This PR touches \`lib/eligibility.ts\` or \`lib/profile.ts\` — held for explicit human/cross-agent review per \`CLAUDE.md\`, not auto-merged."
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
