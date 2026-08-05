@@ -1,0 +1,69 @@
+name: Dispatch issue to cloud agent
+
+# Removes the manual "Assign to Agent" click. Add a label starting with
+# `agent:` to any issue and this fires the same underlying Agent Tasks API
+# that button uses (https://docs.github.com/en/copilot/how-tos/use-copilot-agents/cloud-agent/use-cloud-agent-via-the-api).
+#
+# Label conventions:
+#   agent:dispatch              -> auto model selection
+#   agent:<model-slug>          -> pin a specific model, e.g. agent:claude-sonnet-5
+#     (slug must match what GitHub's agent tasks API expects — if a pinned
+#     model fails, this job's log will show the API's error; fall back to
+#     agent:dispatch for auto-selection while confirming the right slug)
+#
+# Requires a repo secret AGENT_TASK_PAT — a classic personal access token
+# with `repo` scope. This MUST be a real PAT: the agent tasks API explicitly
+# rejects server-to-server tokens (including the default GITHUB_TOKEN this
+# workflow would otherwise use), per GitHub's own docs. The token lives only
+# in this repo's encrypted secrets — never pasted into chat, never touches
+# Claude's sandbox.
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  dispatch:
+    if: startsWith(github.event.label.name, 'agent:')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Determine model from label
+        id: model
+        run: |
+          LABEL="${{ github.event.label.name }}"
+          MODEL="${LABEL#agent:}"
+          if [ "$MODEL" = "dispatch" ]; then MODEL=""; fi
+          echo "model=$MODEL" >> "$GITHUB_OUTPUT"
+
+      - name: Start cloud agent task
+        env:
+          GH_AGENT_PAT: ${{ secrets.AGENT_TASK_PAT }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          REPO: ${{ github.repository }}
+          MODEL: ${{ steps.model.outputs.model }}
+        run: |
+          if [ -z "$GH_AGENT_PAT" ]; then
+            echo "::error::AGENT_TASK_PAT secret is not set — see comment at top of this workflow file."
+            exit 1
+          fi
+
+          PROMPT=$(printf '%s\n\n%s\n\nWhen done, open a PR whose description includes "Fixes #%s" so it auto-links to the issue. Read CLAUDE.md at the repo root first for project constraints before making changes.' \
+            "$ISSUE_TITLE" "$ISSUE_BODY" "$ISSUE_NUMBER")
+
+          BODY=$(jq -n \
+            --arg prompt "$PROMPT" \
+            --arg base "main" \
+            --arg model "$MODEL" \
+            '{prompt: $prompt, base_ref: $base, create_pull_request: true}
+             + (if $model != "" then {model: $model} else {} end)')
+
+          curl -sS -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            -H "Authorization: Bearer $GH_AGENT_PAT" \
+            "https://api.github.com/agents/repos/$REPO/tasks" \
+            -d "$BODY" \
+            -w "\nHTTP %{http_code}\n" \
+            --fail-with-body
