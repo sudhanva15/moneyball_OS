@@ -3,10 +3,12 @@
 Append-only. Each entry is a version; each version has a matching `docs/vX.Y/`
 folder with the full documentation as of that release.
 
-## Unreleased — agent-dispatch comment trigger (2026-08-05)
+## Unreleased — agent-dispatch: fixed token type + self-reporting (2026-08-05)
 
 - `.github/workflows/agent-dispatch.yml` now also fires on an `/agent` (or `/agent <model-slug>`) comment on an issue, not just an `agent:*` label — covers issues #1-#3, which predate this workflow and have no label-trigger path. Merged with PR #6's ticker-wiring changes via `git merge origin/main` (commit `ad0980f`); `next-env.d.ts` and `tsconfig.tsbuildinfo` moved to `.gitignore` (generated files, shouldn't have been committed).
-- Still blocked on: `AGENT_TASK_PAT` repo secret (classic PAT, `repo` scope) not yet confirmed set — required before either trigger path can actually start a cloud agent task.
+- **Root-caused a run of failed dispatches:** the workflow always posts its result (HTTP status + response body) as a comment on the triggering issue now, since Actions log viewing on this repo requires a signed-in GitHub session that isn't always available. That surfaced the real error: `403 {"message":"forbidden"}`.
+- Per [GitHub's Agent Tasks API docs](https://docs.github.com/en/rest/agent-tasks/agent-tasks), the "Start a task" endpoint does **not** accept classic PATs at all — only a fine-grained PAT (repo-scoped, "Agent tasks" permission set to Read and write) or a GitHub App user access token. The original setup instructions in this workflow's header comment (classic PAT, `repo` scope) were wrong; corrected. `AGENT_TASK_PAT` needs to be regenerated as a fine-grained token before dispatch will work.
+- Also corrected the example model slugs in the workflow comment (`claude-sonnet-4.6` etc., per the current docs) — the earlier `claude-sonnet-5` example didn't match any value the API actually accepts.
 
 ## Unreleased — eligibility ticker wiring (2026-08-05)
 
